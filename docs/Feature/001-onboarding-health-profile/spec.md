@@ -4,8 +4,9 @@
 > **Feature directory:** `docs/Feature/001-onboarding-health-profile/`  
 > **Source requirements:** [`requirement.md`](requirement.md) — approved by explicit user decision on 2026-11-10  
 > **Prepared by:** `@planner`  
-> **Status:** `Approved — explicit user approval recorded 2026-11-10`
-> **Approval authority:** Explicit user approval, 2026-11-10; roadmap authoring is authorized subject to workspace and branch-base prerequisites.
+> **Status:** `Approved — amended specification explicitly approved 2026-11-10`
+> **Approval history:** Original specification explicitly approved by the user on 2026-11-10. The user resolved
+> HealthKit height/body-weight sample selection and explicitly approved the amended specification on 2026-11-10.
 
 ## 1. Scope and Layer Placement
 
@@ -72,8 +73,8 @@ All repositories and services are concrete types. No repository or service proto
 | `HealthScreeningDraft` | `hasHealthIssue` | Computed `Bool` | No | True iff any selected ID is not a None ID | `FR-04` |
 | `ProfileValueSource` | cases | `health = "HEALTH"`, `manual = "MANUAL"` | No | Stored per required profile value | `FR-12` |
 | `HealthProfileSnapshot` | `dateOfBirth` | `LocalDate?` | Yes | Readable HealthKit characteristic only | `FR-07`, `FR-11` |
-| `HealthProfileSnapshot` | `heightCentimeters` | `Double?` | Yes | Readable HealthKit height only | `FR-07`, `FR-11` |
-| `HealthProfileSnapshot` | `bodyWeightKilograms` | `Double?` | Yes | Readable HealthKit body mass only | `FR-07`, `FR-11` |
+| `HealthProfileSnapshot` | `heightCentimeters` | `Double?` | Yes | Value from the independently selected readable height sample with the latest `endDate`; no freshness cutoff; `nil` when no readable sample exists | `FR-07`, `FR-11`; user decision 2026-11-10 |
+| `HealthProfileSnapshot` | `bodyWeightKilograms` | `Double?` | Yes | Value from the independently selected readable body-mass sample with the latest `endDate`; no freshness cutoff; `nil` when no readable sample exists | `FR-07`, `FR-11`; user decision 2026-11-10 |
 | `ConfirmedProfile` | `dateOfBirth` | `LocalDate` | No | Valid past date; no age gate | `FR-13` |
 | `ConfirmedProfile` | `heightCentimeters` | `Double` | No | Greater than zero | `FR-13` |
 | `ConfirmedProfile` | `bodyWeightKilograms` | `Double` | No | Greater than zero | `FR-13` |
@@ -225,6 +226,8 @@ stateDiagram-v2
 | Catalog option ID | `String` | None | Exact ID in its authoritative v1 stage catalog | `HealthScreeningService` | Reject unknown ID; remain on stage | `FR-02`, requirement §8 |
 | Stage selection | `Set<String>` | None | Exclusive None ID or one-or-more positive IDs; never both | `HealthScreeningService` | Prevent confirmation | `FR-02`, `FR-03` |
 | HealthKit read set | HealthKit object types | None | DOB via `dateOfBirthComponents()`; `HKQuantityTypeIdentifier.height`; `HKQuantityTypeIdentifier.bodyMass` only | `HealthDataRepository` | Do not request broader type | `FR-07`; Guide 17 §1.2 |
+| HealthKit height sample | Readable quantity samples | cm | Independently choose the sample with the greatest `endDate`; no freshness cutoff; no readable sample produces `nil` | `HealthDataRepository` | Leave height unavailable for manual entry; do not claim denial | `FR-10`, `FR-11`; user decision 2026-11-10 |
+| HealthKit body-mass sample | Readable quantity samples | kg | Independently choose the sample with the greatest `endDate`; no freshness cutoff; no readable sample produces `nil` | `HealthDataRepository` | Leave body weight unavailable for manual entry; do not claim denial | `FR-10`, `FR-11`; user decision 2026-11-10 |
 | Date of birth | `LocalDate` | Gregorian date | Strictly before current local date; no age range | `HealthProfileService` | Prevent profile confirmation | `FR-13` |
 | Height | `Double` | cm | `> 0` | `HealthProfileService` | Prevent profile confirmation | `FR-13` |
 | Current body weight | `Double` | kg | `> 0` | `HealthProfileService` | Prevent profile confirmation | `FR-13` |
@@ -250,6 +253,19 @@ stateDiagram-v2
 
 Example: diagnoses = `diagnosis.none`, symptoms = `symptom.pending-product-01`, injuries =
 `injury.none` produces `hasHealthIssue == true`, Easy Walking, and the exact v1 disclaimer.
+
+### Rule: HealthKit Profile Sample Selection
+
+| Item | Definition | Source |
+|---|---|---|
+| Inputs | All readable HealthKit height samples and all readable HealthKit body-mass samples | `FR-07`, `FR-10`, `FR-11` |
+| Rule | Select height and body weight independently. For each quantity, use the readable sample with the greatest `endDate`; apply no freshness cutoff. | Explicit user decision, 2026-11-10 |
+| Output | Optional height in centimeters and optional body weight in kilograms in `HealthProfileSnapshot` | `FR-11`; user decision 2026-11-10 |
+| Ordering | Descending `endDate`; the first readable sample supplies that quantity | Explicit user decision, 2026-11-10 |
+| Fallback | If no readable sample exists for a quantity, set only that snapshot field to `nil` and require manual entry for it. Do not infer or report per-type denial. | `FR-10`–`FR-12`; user decision 2026-11-10 |
+
+Height and body weight do not need to come from measurements recorded at the same time. An older readable sample
+remains eligible because the approved rule has no freshness cutoff.
 
 ### Formula: BMI and Classification
 
@@ -306,7 +322,7 @@ next week with Tuesday/Thursday/Saturday yields all three dates in the next Greg
 | Layer | Concrete type | Operation | Input | Output | Errors | Side effects | Concurrency | Requirement |
 |---|---|---|---|---|---|---|---|---|
 | Data repository | `HealthDataRepository` | `requestReadAccess()` | Exact DOB/height/body-mass set | Completion | unavailable, request failure | HealthKit prompt only | `async`, actor-isolated HealthKit access | `FR-07`–`FR-10` |
-| Data repository | `HealthDataRepository` | `fetchProfileSnapshot()` | None | `HealthProfileSnapshot` | query failure | Read only; no writes | `async`, actor-isolated | `FR-07`–`FR-12` |
+| Data repository | `HealthDataRepository` | `fetchProfileSnapshot()` | None | Snapshot containing DOB plus independently selected latest-readable height/body-mass values, with `nil` for a quantity having no readable sample | query failure | Read only; no writes | `async`, actor-isolated | `FR-07`–`FR-12`; user decision 2026-11-10 |
 | Data repository | `OnboardingRepository` | `saveCompleted(_:)` | Complete `OnboardingDraft` | Persisted record identity | validation/SwiftData save failure | Atomic root/children insert or rollback | Model-context isolated | `FR-29`, `FR-30` |
 | Domain service | `HealthScreeningService` | `catalogs()`, `select(...)`, `evaluate(...)` | Stage selections | Valid selections and issue result | unknown/mixed ID | None | Synchronous, `Sendable` values | `FR-02`–`FR-06` |
 | Domain service | `OnboardingHealthService` | `requestAndLoadProfile()` | User HealthKit choice | Snapshot or typed unavailable failure | repository error | Calls concrete health repository | `async` | `FR-07`–`FR-12` |
@@ -328,7 +344,7 @@ This is dependency injection into concrete types, not a repository/service proto
 | HealthKit unavailable | Platform availability check | Typed unavailable result | Privacy-safe unavailable message | Retry where meaningful or Continue Manually | `FR-09`, `FR-10` |
 | Authorization request failure | Request throws | Repository → health service → ViewModel | Do not claim detected denial | Retry or Continue Manually | `FR-09`, `FR-10` |
 | HealthKit query failure | DOB/height/body-mass query throws | Repository → health service → ViewModel | Do not claim detected denial | Retry or Continue Manually | `FR-09`, `FR-10` |
-| Missing readable value | Optional snapshot field is nil | Snapshot to profile state | Require only the missing value manually | Enter valid local value | `FR-10`–`FR-12` |
+| Missing readable value | No readable DOB, height, or body-mass value; for height/body mass, no readable sample exists at any age | Snapshot to profile state | Require only the missing value manually; do not claim denial | Enter valid local value | `FR-10`–`FR-12`; user decision 2026-11-10 |
 | Invalid profile | DOB not past or height/weight nonpositive | Profile service error | Keep profile screen and identify invalid field | Correct value | `FR-13` |
 | Invalid target | Target nonpositive | Goal service error | Keep goal screen and identify invalid field | Correct target | `FR-16` |
 | Invalid schedule | Track bounds, count, or start rule fails | Plan service error | Keep schedule screen and identify invalid selection | Correct allowed fields | `FR-20`–`FR-26` |
@@ -350,8 +366,8 @@ in-memory SwiftData container. Domain-service line coverage must be at least 80%
 | `AC-06` | `test_AC06_requestsOnlyDobHeightAndBodyMass()` | Captured request seam | Choose HealthKit | Exact three-type read set | Repository | Unit |
 | `AC-07` | `test_AC07_skipAvoidsRequestAndUsesManualProfile()` | Health choice | Choose Skip | No request; manual profile state | ViewModel | Unit |
 | `AC-08` | `test_AC08_healthFailureOffersRetryAndManual()` | Throwing repository seam | Request | Privacy-safe recovery choices | Service/ViewModel | Unit |
-| `AC-09` | `test_AC09_readableValuesPrefillAsHealth()` | Full snapshot | Load profile | Three editable HEALTH values only | Service/ViewModel | Unit |
-| `AC-10` | `test_AC10_partialSnapshotRequiresOnlyMissingValues()` | Partial snapshot | Load profile | Available prefill; missing manual | Service | Unit |
+| `AC-09` | `test_AC09_readableValuesPrefillAsHealth()` | Readable DOB plus multiple readable height/body-mass samples with distinct `endDate` values | Load profile | Independently latest height and body mass prefill as editable HEALTH values; older samples and broader metrics are ignored | Repository/Service/ViewModel | Unit |
+| `AC-10` | `test_AC10_partialSnapshotRequiresOnlyMissingValues()` | One quantity has an older readable sample and the other has no readable sample | Load profile | Older readable value prefills because there is no freshness cutoff; only the quantity with no readable sample requires manual entry | Repository/Service | Unit |
 | `AC-11` | `test_AC11_manualEditStaysLocalAndChangesSource()` | HEALTH prefill | Edit value | MANUAL source; no write call | Service/Repository | Unit |
 | `AC-12` | `test_AC12_validatesPastDobAndPositiveMeasurements()` | Boundary values | Confirm profile | Invalid blocked; any past DOB accepted | Service | Unit |
 | `AC-13` | `test_AC13_bmiThirtyDisplaysAndClassifiesObesity()` | 170 cm, 86.7 kg | Calculate | Raw 30 boundary; display 30.0 | Service | Unit |
@@ -380,7 +396,7 @@ in-memory SwiftData container. Domain-service line coverage must be at least 80%
 
 | Dependency | Contract used | Availability behavior | Source |
 |---|---|---|---|
-| HealthKit | Read-only DOB via `dateOfBirthComponents()`, `HKQuantityTypeIdentifier.height`, and `HKQuantityTypeIdentifier.bodyMass` | Skip/unavailable/failure uses manual profile recovery; never infer per-type read denial | `FR-07`–`FR-12`; Rule 01; Guide 17 §1.2 |
+| HealthKit | Read-only DOB via `dateOfBirthComponents()`, `HKQuantityTypeIdentifier.height`, and `HKQuantityTypeIdentifier.bodyMass`; independently select the readable height/body-mass sample with the latest `endDate`, with no freshness cutoff | A quantity with no readable sample becomes `nil` for manual entry; skip/unavailable/failure uses manual recovery; never infer per-type read denial | `FR-07`–`FR-12`; Rule 01; Guide 17 §1.2; user decision 2026-11-10 |
 | SwiftData | One atomic local save for root and session children | Failure rolls back and leaves flow incomplete/retryable | `FR-29`, `FR-30` |
 | Foundation Gregorian calendar | Validate/arithmetic for `LocalDate`; Monday–Sunday week | Invalid date is rejected; persisted value has no time-zone conversion | `FR-23`–`FR-27` |
 | Approved v1 content | Exact catalog IDs/labels and disclaimer text from requirement §8 | Values remain authoritative until a separately approved requirement revision | User approval 2026-11-10 |
@@ -391,6 +407,12 @@ in-memory SwiftData container. Domain-service line coverage must be at least 80%
 
 None. All material v1 product and technical decisions required by this specification are resolved.
 
+### Resolved User Decisions
+
+| ID | Decision | Authority | Documentation impact |
+|---|---|---|---|
+| `UD-SPEC-01` | For height and body weight, independently use the readable HealthKit sample with the latest `endDate`; apply no freshness cutoff; when no readable sample exists, return `nil` and require manual entry for that quantity. | Explicit user decision, 2026-11-10 | `HealthProfileSnapshot`, HealthKit validation and business rules, repository contract, error fallback, AC-09/AC-10 verification, and HealthKit dependency contract |
+
 ## 10. Quality Gate
 
 - [x] The source requirement is explicitly approved and contains no material v1 open decision.
@@ -399,6 +421,7 @@ None. All material v1 product and technical decisions required by this specifica
 - [x] Every `AC-01` through `AC-31` has one objective planned verification.
 - [x] None selection, exact v1 catalog values, automatic no-ack disclaimer, and exact copy are specified.
 - [x] HealthKit scope is limited to DOB, height, and body mass with Skip/Retry/manual/privacy behavior.
+- [x] Height and body weight independently use the latest readable `endDate`, have no freshness cutoff, and fall back to `nil` plus manual entry when no readable sample exists.
 - [x] BMI, target range, assignment, 5-minute duration sets, weekday rules, and plan coverage are exact.
 - [x] `LocalDate` and persisted `YYYY-MM-DD` values prevent time-zone calendar-day shifts.
 - [x] Review has explicit confirmation only; no unsupported edit loop or required ready screen exists.
@@ -406,9 +429,10 @@ None. All material v1 product and technical decisions required by this specifica
 - [x] Repositories and services are concrete and no protocol ambiguity remains in this specification.
 - [x] Domain-service coverage target is at least 80%, and tests use no real HealthKit store.
 - [x] No template comments, angle-bracket placeholders, obsolete OD references, or stale FR/AC ranges remain.
-- [x] The user reviewed and explicitly approved this specification on 2026-11-10.
+- [x] The user reviewed and explicitly approved the original specification on 2026-11-10.
+- [x] The user reviewed and explicitly approved the `UD-SPEC-01` amended specification on 2026-11-10.
 - [ ] Rule 02 is synchronized and the implementation workspace is restored before builder handoff planning.
 
-**Gate result:** Specification approved on 2026-11-10. Roadmap authoring is authorized by the documentation sequence,
-but roadmap/phase work remains blocked in this workspace because the Git repository, Xcode project, source/test tree,
-and Rule 06a branch-base inventory are unavailable.
+**Gate result:** The amended specification was explicitly approved on 2026-11-10, so roadmap and planning-only phase
+authoring may resume. Builder handoff remains separately blocked until Rule 02 is synchronized and the Xcode/source/test
+workspace and Rule 06a branch-base inventory are available.
