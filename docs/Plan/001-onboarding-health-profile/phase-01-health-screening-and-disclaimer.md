@@ -1,98 +1,103 @@
-# Implementation Phase Plan — Health Screening and Conditional Disclaimer
+# Implementation Phase Plan — Health Screening and Automatic Disclaimer
 
 > **Feature ID:** `001`  
 > **Phase sequence:** `01`  
+> **Task ID:** `001`  
 > **Parent roadmap:** `docs/Plan/001-onboarding-health-profile/roadmap.md`  
 > **Output path:** `docs/Plan/001-onboarding-health-profile/phase-01-health-screening-and-disclaimer.md`  
-> **Source requirements:** `docs/Feature/001-onboarding-health-profile/requirement.md`  
-> **Source specification:** `docs/Feature/001-onboarding-health-profile/spec.md`  
-> **Task ID:** `001`  
-> **Target branch:** `feat/001-health-screening-flow`  
-> **Base branch:** `Unresolved — user selection required by Rule 06a`  
+> **Source requirements:** `docs/Feature/001-onboarding-health-profile/requirement.md` — approved 2026-11-10  
+> **Source specification:** `docs/Feature/001-onboarding-health-profile/spec.md` — approved 2026-11-10  
+> **Target branch:** `feat/001-health-screening-flow` — intended; verified absent and must not be created before phase approval  
+> **Base branch:** `development` — verified at `dd3204e`, tracking `origin/development`  
 > **Prepared by:** `@planner`  
-> **Executing agent:** `@builder` after approval  
-> **Status:** `Draft — blocked; not authorized for builder execution`
+> **Executing agent:** `@builder` only after every handoff gate passes  
+> **Status:** `Draft — blocked by parent roadmap RB-01 and GOV-01; not Ready for Review`
+
+All paths below are canonical intended paths from the approved specification and `AGENTS.md`. They are not verified
+against an Xcode target because the implementation workspace is absent.
 
 ## 1. Vertical-Slice Outcome and Phase Boundary
 
-The user can complete the first onboarding slice in the exact order diagnoses → symptoms → injuries. The system
-produces one deterministic `hasHealthIssue` result, optionally presents the approved Health Disclaimer, and emits a
-screening-complete event for Phase 02. An injury follows the same issue rule as any other selection and does not create
-a separate onboarding branch.
+This phase delivers an independently verifiable first onboarding slice:
 
-This phase covers `FR-01`–`FR-04` and `AC-01`–`AC-03`. It does not request HealthKit, capture profile or goal data,
-assign the training type, create a schedule, or persist completed onboarding. Source: Guide 2 §2.4; Guide 3 §3.3;
-user decisions 2026-11-10.
+1. The user progresses in the fixed order diagnosed conditions → active symptoms → ongoing injuries.
+2. Each screen uses its authoritative v1 closed multi-select catalog, enforces exclusive None, and provides no free text.
+3. Any positive selection produces `hasHealthIssue == true`; all-None produces false.
+4. An issue displays the exact v1 disclaimer without acknowledgement and automatically advances after presentation.
+5. No issue skips the disclaimer. Both branches end at the `healthAccessChoice` state owned by Phase 02.
 
-Execution remains blocked until the screening catalogs (`OD-01`), disclaimer policy (`OD-02`), repository-rule impact
-(`OD-08`), actual source/test targets (`RB-01`), and base branch (`RB-02`) are resolved in the parent roadmap.
+Coverage is exactly `FR-01`–`FR-06` and `AC-01`–`AC-05`. Sources: approved
+`requirement.md` §§4, 6, 8; approved `spec.md` §2 “Authoritative V1 Catalogs,” §3 states/transitions, §4 screening
+validation, and §5 “Screening Selection and Health Issue”; Guide 2 §2.4; Guide 3 §3.3.
+
+This phase does not request HealthKit, capture or persist profile/goal data, calculate BMI, assign a training type,
+configure a schedule, generate sessions, save onboarding, or create an incomplete-draft store.
 
 ## 2. Scope and Target File Map
 
-These are intended repository-relative paths. `@planner` must reconcile them against the restored/available Xcode
-source tree before the phase can become Ready for Review.
-
 | Change | Path | Layer | Purpose | Requirement / decision |
 |---|---|---|---|---|
-| Create | `Kurin/iOS/Features/Onboarding/Domain/Models/HealthScreening.swift` | Domain model | Represent selected diagnosis, symptom, and injury IDs without framework types. | `FR-01`–`FR-03`, `OD-01` |
-| Create | `Kurin/iOS/Features/Onboarding/Domain/Models/HealthScreeningEvaluation.swift` | Domain model | Carry `hasHealthIssue` and approved disclaimer outcome. | `FR-03`, `FR-04`, `OD-02` |
-| Create | `Kurin/iOS/Features/Onboarding/Domain/Services/HealthScreeningService.swift` | Domain service | Validate approved IDs, compute issue flag, and map disclaimer triggers. | `FR-01`–`FR-04` |
-| Create | `Kurin/iOS/Features/Onboarding/Presentation/ViewModels/OnboardingStage.swift` | Presentation state | Define the explicit diagnoses, symptoms, injuries, disclaimer, and screening-complete states. | `FR-01`–`FR-04`; Rule 05 |
-| Create | `Kurin/iOS/Features/Onboarding/Presentation/ViewModels/OnboardingViewModel.swift` | ViewModel | Expose ordered screening/disclaimer states and call the screening service only. | `FR-01`–`FR-04`, `NFR-02`, `NFR-03` |
-| Create | `Kurin/iOS/Features/Onboarding/Presentation/Views/HealthScreeningView.swift` | View | Render the active diagnoses, symptoms, or injuries stage. | `FR-01`, `FR-02`, `NFR-01` |
-| Create | `Kurin/iOS/Features/Onboarding/Presentation/Views/HealthDisclaimerView.swift` | View | Render approved conditional disclaimer content and acknowledgement control. | `FR-04`, `OD-02`, `NFR-01` |
-| Create | `Kurin/iOS/Features/Onboarding/Presentation/SupportViews/ScreeningSelectionSection.swift` | Support view | Render accessible catalog choices without business logic. | `FR-01`, `FR-02`, `OD-01` |
-| Create | `KurinTests/Onboarding/HealthScreeningServiceTests.swift` | Unit tests | Verify selection evaluation and disclaimer mapping. | `AC-01`–`AC-03` |
-| Create | `KurinTests/Onboarding/OnboardingViewModelTests.swift` | Unit tests | Verify ordered stage transitions and completion emission. | `AC-01`–`AC-03` |
-| Create | `KurinTests/TestData/OnboardingTestData.swift` | Test fixtures | Centralize synthetic catalog IDs and non-personal fixtures. | Rule 03 Test Data |
+| Create | `Kurin/iOS/Features/Onboarding/Data/Models/ScreeningStage.swift` | Data / Model | Define the fixed diagnoses, symptoms, injuries order. | `FR-02`; spec §2 |
+| Create | `Kurin/iOS/Features/Onboarding/Data/Models/ScreeningOption.swift` | Data / Model | Represent exact v1 ID, label, stage, and None identity. | `FR-02`, `FR-03`; requirement §8; spec §2 |
+| Create | `Kurin/iOS/Features/Onboarding/Data/Models/ScreeningStageSelection.swift` | Data / Model | Represent one stage's selected ID set and exclusive-None invariant. | `FR-02`, `FR-03`; spec §§2, 4 |
+| Create | `Kurin/iOS/Features/Onboarding/Data/Models/HealthScreeningDraft.swift` | Data / Model | Hold the three stage selections and computed issue result in memory. | `FR-02`–`FR-04`; spec §2 |
+| Create | `Kurin/iOS/Features/Onboarding/Domain/Services/HealthScreeningService.swift` | Domain / Service | Supply authoritative catalogs, validate selection transitions, and evaluate `hasHealthIssue`. | `FR-02`–`FR-06`; spec §§4–6 |
+| Create | `Kurin/iOS/Features/Onboarding/Presentation/ViewModels/OnboardingStage.swift` | Presentation / State | Define diagnoses, symptoms, injuries, disclaimer, and Phase 02 boundary states. | `FR-01`–`FR-06`; spec §3 |
+| Create | `Kurin/iOS/Features/Onboarding/Presentation/ViewModels/OnboardingViewModel.swift` | Presentation / ViewModel | Orchestrate ordered stage events through the concrete screening service. | `FR-01`–`FR-06`; `NFR-02`, `NFR-03` |
+| Create | `Kurin/iOS/Features/Onboarding/Presentation/Views/HealthScreeningView.swift` | Presentation / View | Render the active catalog stage with no business logic or free-text path. | `FR-01`–`FR-03`; `NFR-01` |
+| Create | `Kurin/iOS/Features/Onboarding/Presentation/Views/HealthDisclaimerView.swift` | Presentation / View | Present the exact v1 message, no acknowledgement control, and automatic presentation-complete event. | `FR-05`, `FR-06`; `NFR-01` |
+| Create | `Kurin/iOS/Features/Onboarding/Presentation/SupportViews/ScreeningSelectionSection.swift` | Presentation / Support View | Render accessible multi-select options and exclusive None state from ViewModel data. | `FR-02`, `FR-03`; `NFR-01`, `NFR-03` |
+| Create | `KurinTests/Onboarding/HealthScreeningServiceTests.swift` | Tests | Verify catalog identity, None semantics, issue evaluation, and disclaimer output. | `AC-02`–`AC-04`; `NFR-05` |
+| Create | `KurinTests/Onboarding/OnboardingViewModelTests.swift` | Tests | Verify ordered flow and disclaimer/no-disclaimer transitions. | `AC-01`, `AC-04`, `AC-05`; `NFR-05` |
 
-No Data-layer persistence model, repository implementation, or completed-aggregate persistence is introduced in this
-phase. Phase 05 owns the screening persistence representation, its mapping, and the atomic completed-aggregate save.
+No Data repository, SwiftData model, HealthKit type, App composition edit, or Phase 02 view is part of this slice.
 
 ## 3. Dependency-Ordered Work Breakdown
 
 | Step | Task | Files | Inputs / sources | Depends on | Deliverable | Completion evidence | AC coverage |
 |---:|---|---|---|---|---|---|---|
-| 0 | Resolve phase gates and reconcile paths | Parent roadmap, feature docs, actual Xcode tree | `OD-01`, `OD-02`, `OD-08`, `RB-01`, `RB-02`; Rule 06a | None | Approved catalogs/disclaimer; reconciled files/targets; selected base | Roadmap records no Phase 01 blocker and user approval | All |
-| 1 | Define screening domain representations | `HealthScreening.swift`, `HealthScreeningEvaluation.swift` | Requirement `FR-01`–`FR-04`; spec §2 | Step 0 | Framework-independent screening input and evaluation state | Static type review; no invented catalog IDs or persistence types | `AC-01`, `AC-02` |
-| 2 | Implement deterministic screening evaluation | `HealthScreeningService.swift` | Guide 2 §2.4; Guide 3 §3.3; approved `OD-01`, `OD-02` | Step 1 | ID validation, OR-based issue flag, disclaimer outcome | Service tests prove each empty/non-empty category and trigger mapping | `AC-01`–`AC-03` |
-| 3 | Implement explicit ordered presentation state | `OnboardingStage.swift`, `OnboardingViewModel.swift` | Spec §3 transitions; Rule 05 state/concurrency guidance | Step 2 | Dedicated stage enum plus `@MainActor @Observable` ViewModel ordered diagnoses → symptoms → injuries → disclaimer/completion | State-type review and ViewModel transition tests pass | `AC-01`–`AC-03` |
-| 4 | Implement accessible screening views | `HealthScreeningView.swift`, `HealthDisclaimerView.swift`, `ScreeningSelectionSection.swift` | Approved catalog/copy; Rules 01 and 05 | Step 3 | Dynamic Type, semantic colors, labels, no business logic | Accessibility/static review | `AC-01`–`AC-03` |
-| 5 | Complete tests and documentation | Test files and all phase production files | Rule 03; Rule 05 DocC | Steps 2–4 | AC-named tests, synthetic fixtures, DocC on non-trivial internal symbols | All Phase 01 tests pass; service coverage ≥80% | `AC-01`–`AC-03` |
+| 1 | Define the exact screening values | `ScreeningStage.swift`, `ScreeningOption.swift`, `ScreeningStageSelection.swift`, `HealthScreeningDraft.swift` | Requirement `FR-02`–`FR-04` and §8; spec §2 | Parent roadmap handoff blockers resolved | Framework-independent value types containing only the approved v1 IDs/labels and explicit None identity | Source review proves exact IDs/labels, fixed stage order, and no invented catalog content | `AC-01`–`AC-03` |
+| 2 | Implement deterministic selection and issue rules | `HealthScreeningService.swift` | Requirement `FR-02`–`FR-06`; spec §§4–6 | Step 1 | Concrete service with authoritative catalogs, exclusive-None transition, unknown-ID rejection, issue evaluation, and exact disclaimer output | Service tests pass and service coverage contributes to ≥80% Domain-service line coverage | `AC-02`–`AC-04` |
+| 3 | Implement ordered observable state | `OnboardingStage.swift`, `OnboardingViewModel.swift` | Requirement `FR-01`–`FR-06`; spec §3; Rules 02 and 05 as governed by `GOV-01` | Step 2 | `@MainActor @Observable` ViewModel that calls the concrete service only and reaches the Phase 02 boundary state | ViewModel tests prove fixed ordering, exact conditional branch, automatic no-ack transition, and no name/reminder state | `AC-01`, `AC-04`, `AC-05` |
+| 4 | Implement accessible screening/disclaimer presentation | `HealthScreeningView.swift`, `HealthDisclaimerView.swift`, `ScreeningSelectionSection.swift` | Requirement `NFR-01`, `NFR-03`; exact v1 copy; Rules 01 and 05 | Step 3 | SwiftUI screens using semantic styling, Dynamic Type, accessibility labels, no free text, no acknowledgement control, and no business logic | Objective VoiceOver, Dynamic Type, Dark Mode, and source inspection after workspace restoration | `AC-01`–`AC-05` |
+| 5 | Complete AC-mapped verification | `HealthScreeningServiceTests.swift`, `OnboardingViewModelTests.swift` | Approved spec §8; Rule 03 | Steps 2–4 | Exact `test_AC01_...` through `test_AC05_...` tests with synthetic data only | Reconciled test command passes all five tests; Domain service coverage ≥80%; accessibility inspection passes | `AC-01`–`AC-05` |
 
 ## 4. Acceptance Criteria to Test Mapping
 
 | AC | Verification target | Test or check name | Setup | Core assertion | Planned file |
 |---|---|---|---|---|---|
-| `AC-01` | Service and ordered ViewModel flow | `test_AC01_emptyOrderedScreeningHasNoHealthIssue()` | Approved catalogs; no selections in all three stages | Stages occur in order and completion result has `hasHealthIssue == false`. | `KurinTests/Onboarding/HealthScreeningServiceTests.swift`, `KurinTests/Onboarding/OnboardingViewModelTests.swift` |
-| `AC-02` | Screening evaluation | `test_AC02_anyScreeningSelectionHasHealthIssue()` | One approved diagnosis, symptom, and injury fixture evaluated separately | Every non-empty category produces `hasHealthIssue == true`; injury has no extra branch. | `KurinTests/Onboarding/HealthScreeningServiceTests.swift` |
-| `AC-03` | Disclaimer mapping and state transition | `test_AC03_disclaimerAppearsOnlyForApprovedTriggers()` | One approved trigger and one non-trigger result | Only the trigger enters disclaimer before emitting screening complete. | `KurinTests/Onboarding/HealthScreeningServiceTests.swift`, `KurinTests/Onboarding/OnboardingViewModelTests.swift` |
+| `AC-01` | Ordered ViewModel flow | `test_AC01_startsWithOrderedScreening()` | New in-memory ViewModel | Diagnoses → symptoms → injuries; no name/reminder state | `KurinTests/Onboarding/OnboardingViewModelTests.swift` |
+| `AC-02` | Exclusive None behavior | `test_AC02_noneIsExclusiveInEveryCatalog()` | Exercise positive → None and None → positive in each authoritative v1 catalog | None clears positives; a positive clears None; all-None evaluates false | `KurinTests/Onboarding/HealthScreeningServiceTests.swift` |
+| `AC-03` | Positive-selection issue evaluation | `test_AC03_anyPositiveSelectionSetsHealthIssue()` | Select each stage's positive v1 option separately | Exact ID is accepted, None clears, and issue evaluates true | `KurinTests/Onboarding/HealthScreeningServiceTests.swift` |
+| `AC-04` | Issue disclaimer transition | `test_AC04_issueShowsExactAutomaticDisclaimer()` | Complete injuries with one positive selection, then emit presentation-complete | Exact v1 copy appears, no acknowledgement is stored/required, and state advances automatically | `KurinTests/Onboarding/HealthScreeningServiceTests.swift`, `KurinTests/Onboarding/OnboardingViewModelTests.swift` |
+| `AC-05` | No-issue branch | `test_AC05_noIssueSkipsDisclaimer()` | Complete injuries after all three stages select None | ViewModel reaches `healthAccessChoice` without disclaimer | `KurinTests/Onboarding/OnboardingViewModelTests.swift` |
 
 ## 5. Verification Plan
 
 | Verification | Command or procedure | Environment | Expected result | Risk addressed |
 |---|---|---|---|---|
-| Source/target reconciliation | Inspect the available Xcode project groups, iOS target, schemes, and test targets; update this plan if paths differ. | Repository checkout with Xcode project | Every path belongs to the intended iOS/test target before implementation. | Invented or stale paths |
-| Build discovery | Use the repository-approved Xcode scheme-discovery procedure after `RB-01` is resolved; record the exact build command before handoff. | Xcode with iOS 27 SDK | A valid iOS scheme and destination are recorded in this file. | Unexecutable verification |
-| AC unit tests | Run the approved test scheme filtered to `HealthScreeningServiceTests` and Phase 01 `OnboardingViewModelTests`. | iOS unit-test target | All `test_AC01_...` through `test_AC03_...` checks pass. | Incorrect stage/rule behavior |
-| Coverage | Collect Xcode line coverage for `HealthScreeningService`. | Same test run | At least 80% line coverage. | Untested decision paths |
-| Accessibility | Inspect diagnoses, symptoms, injuries, and disclaimer states with VoiceOver, Dynamic Type, and Dark Mode. | iPhone 17 simulator/device | Every interactive control is labelled and content remains usable. | Inaccessible first-run flow |
-| Architecture review | Confirm Views contain no business logic, ViewModel calls only concrete service(s), and no repository is introduced in this slice. | Static review | Layer direction matches the approved rules and `OD-08` resolution. | Premature/incorrect abstraction |
+| Source/target reconciliation | After `RB-01`, inspect restored Xcode groups, iOS target membership, schemes, and test target; update intended paths only if approved structure differs. | Current Git checkout with restored Xcode/source/test workspace | Every planned file belongs to the intended iOS or test target. | Canonical paths may not match the actual project |
+| Baseline build | Blocked: derive and record the exact non-destructive build command only after `RB-01` identifies a valid shared scheme and destination. | Restored Xcode project with iOS 27 SDK | Existing baseline and Phase 01 build succeed. | Invented/unexecutable build command |
+| AC unit tests | Blocked: derive and record the exact test command only after `RB-01`; filter to the reconciled Phase 01 test classes. | Restored iOS test target | All five named AC tests pass without real HealthKit or external I/O. | Incorrect state or business-rule behavior |
+| Coverage | Use the restored scheme's coverage report; exact procedure must be recorded after `RB-01`. | Same reconciled test run | `HealthScreeningService` and applicable Phase 01 Domain services meet ≥80% line coverage. | Untested decision branches |
+| Accessibility and presentation | Inspect all three screening stages and disclaimer with VoiceOver, supported Dynamic Type sizes, Dark Mode, and the smallest supported iPhone layout available for the target. | Reconciled iPhone 17 simulator/device | Every control is labelled; content remains usable; disclaimer is presented/announced before automatic advance; no acknowledgement control exists. | Inaccessible or imperceptible automatic disclaimer |
+| Static architecture review | Inspect imports and call direction after implementation. | Source review | Models are under Data/Models; ViewModel calls concrete service only; Views contain no business logic; no repository/service protocol exists. | Layer or protocol drift |
 
-Exact build/test commands remain intentionally absent until `RB-01` identifies real schemes and targets. A builder
-handoff may not occur while this table contains an unverified procedure.
+No build or test command is executable or authorized from this documentation-only workspace.
 
 ## 6. Architecture and Rule Compliance
 
 | Check | Governing rule | Planned evidence |
 |---|---|---|
-| SwiftUI on iOS 27 with accessibility, Dynamic Type, and semantic colors | Rules 01 and 05 | Accessibility inspection and source review |
-| Diagnoses → symptoms → injuries is represented as explicit state, not Boolean navigation flags | Requirement `FR-01`; Rule 05 state-machine guidance | ViewModel tests and state enum review |
-| View → ViewModel → concrete Service with no View business logic | Rule 02; AGENTS.md | Import/call-direction review |
-| No persistence repository is introduced in this slice | Phase boundary; `OD-08` | File/diff review |
-| `@MainActor`, `@Observable`, async/await where needed, no DispatchQueue | Rule 05 | Strict-concurrency build and static review |
-| AC-numbered tests and synthetic non-personal fixtures | Rule 03 | Test names and fixture review |
-| Only `@planner` edits these docs; `@builder` treats them as read-only | Rule 07 | Diff ownership review |
+| SwiftUI on iOS 27 with Dynamic Type, semantic colors, and accessibility labels | Rule 01; requirement `NFR-01` | Reconciled build plus accessibility inspection |
+| Models use canonical `Data/Models`; business rules use `Domain/Services` | AGENTS.md §2; approved spec §1 | File/target and import review |
+| Concrete `HealthScreeningService`; no repository/service protocols | Requirement `NFR-03`; approved spec §§1, 6; parent `GOV-01` | Rule 02 synchronization plus source review |
+| `@MainActor @Observable` ViewModel calls service only | Rule 05; requirement `NFR-02`, `NFR-03` | Strict-concurrency build and call-direction review |
+| Views contain no business logic or free-text path | Requirement `FR-02`, `NFR-03`; Rule 05 | View and ViewModel source review |
+| No HealthKit, persistence, profile, assignment, or schedule work enters Phase 01 | Phase boundary; roadmap Phase 01 | File/diff review |
+| AC-numbered isolated tests and ≥80% Domain-service coverage | Rule 03; requirement `NFR-05`; spec §8 | Test names, test isolation, and coverage report |
+| Branch base/target follow Task ID 001 convention | Rule 06a | Verified base `development` at `dd3204e`; target-branch creation report only after phase approval |
+| Only `@planner` changes planning docs; `@builder` treats them read-only | Rule 07 | Diff ownership review |
 
 ## 7. Phase Risks and Rollback
 
@@ -100,28 +105,34 @@ handoff may not occur while this table contains an unverified procedure.
 
 | Risk | Impact | Likelihood | Mitigation | Verification |
 |---|---|---|---|---|
-| Invented or clinically incomplete screening choices | High | Certain until `OD-01` resolves | Block implementation and use only approved stable IDs. | Catalog approval recorded in roadmap |
-| Incorrect disclaimer trigger/copy | High | Certain until `OD-02` resolves | Block implementation until product/clinical/legal approval. | Trigger and non-trigger AC fixtures |
-| Injury accidentally gains a stricter undocumented branch | Medium | Medium | Centralize the OR-based issue rule and test injury separately. | `test_AC02_anyScreeningSelectionHasHealthIssue()` |
-| Presentation permits stages out of order | Medium | Medium | Use one explicit stage enum and event guards. | `AC-01` ViewModel transition test |
-| Planned paths do not match the actual Xcode project | High | Certain until `RB-01` resolves | Reconcile paths/targets before approval. | Source/target reconciliation procedure |
+| Placeholder-looking v1 IDs/labels are “cleaned up” or replaced without an approved requirement revision | High | Medium | Define them once in the concrete service catalog and test exact raw IDs/labels. | Exact catalog fixture assertions and diff review |
+| None coexists with a positive ID | High | Medium | Centralize selection transitions and validation in `HealthScreeningService`. | `test_AC02_noneIsExclusiveInEveryCatalog()` |
+| A positive option fails to produce Easy Walking input later | High | Low | Represent `hasHealthIssue` as the tested OR of all positive selections; expose one result to later phases. | `test_AC03_anyPositiveSelectionSetsHealthIssue()` |
+| Disclaimer adds an acknowledgement control or advances before it is presented accessibly | High | Medium | Keep copy and no-ack transition in the approved state contract; require presentation/accessibility inspection. | `test_AC04_issueShowsExactAutomaticDisclaimer()` and VoiceOver inspection |
+| Screens can be completed out of order | Medium | Medium | Use the associated-value `OnboardingStage` state machine and guarded ViewModel events. | `test_AC01_startsWithOrderedScreening()` |
+| Intended files or tests do not belong to real targets | High | Certain until `RB-01` resolves | Keep phase Draft and reconcile every path/scheme before phase review. | Source/target reconciliation |
 
 ### Rollback
 
-If Phase 01 verification fails, stop before merging and revert only the phase-owned source/test files on its working
-branch through normal version-control review. This phase writes no user screening record to production persistence,
-so no data deletion or migration rollback is required. Re-run the pre-phase build/test baseline after reversal and
-return any requirement ambiguity to `@planner`.
+If implementation or verification fails, stop before merge and return the phase-owned source/test diff for review.
+On the Phase 01 working branch, revert only the files listed in Section 2 through normal version-control review; do not
+discard unrelated changes. This phase writes no SwiftData or HealthKit data, so no user-data migration or deletion is
+required. After rollback, run the reconciled baseline build/test procedures and confirm the pre-phase onboarding entry
+behavior is restored before closing the rollback.
 
 ## 8. Builder Handoff Gate
 
-- [x] Phase outcome, current source citations, intended file map, AC mapping, risks, and rollback are documented.
-- [x] No HealthKit, goal, assignment, schedule, or persistence implementation leaks into Phase 01.
-- [ ] `OD-01` screening catalogs and none/free-text behavior are approved.
-- [ ] `OD-02` disclaimer triggers, copy, and acknowledgement behavior are approved.
-- [ ] `OD-08` is resolved or confirmed not to affect this repository-free phase.
-- [ ] `RB-01` reconciles the actual source tree, schemes, targets, and exact verification commands.
-- [ ] `RB-02` records the user-selected base branch and branch-name preflight.
+- [x] Approved requirements and specification are cited.
+- [x] Phase outcome and exclusions cover only `FR-01`–`FR-06` / `AC-01`–`AC-05`.
+- [x] Canonical intended file paths and layer ownership are documented.
+- [x] Every phase AC maps to the exact approved test name.
+- [x] Risks, mitigations, rollback, architecture, and accessibility checks are documented.
+- [x] Template comments, stale decision references, and superseded flow/status language are removed.
+- [x] Base `development` is verified at `dd3204e` and tracks `origin/development`.
+- [ ] `RB-01` reconciles actual paths, target membership, schemes, and executable build/test/coverage procedures.
+- [ ] `GOV-01` synchronizes Rule 02 with the approved concrete no-protocol architecture.
+- [ ] Target `feat/001-health-screening-flow` remains absent until the phase is approved, then is created through Rule 06a.
+- [ ] The phase is explicitly reviewed and approved after blockers resolve.
 - [ ] The parent roadmap records this phase as `Approved`, every predecessor as `Complete`, no blocking open decision for this phase, and builder handoff as ready.
 
-**Handoff decision:** Locked. Do not send this phase to `@builder`.
+**Handoff decision:** Locked. This plan remains Draft and must not be sent to `@builder`.
