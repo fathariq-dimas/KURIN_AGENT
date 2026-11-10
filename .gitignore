@@ -1,0 +1,45 @@
+# Xcode & Apple Platforms
+.DS_Store
+build/
+DerivedData/
+*.moved-aside
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# User-specific Xcode files (Developer Identity Protection)
+xcuserdata/
+*.xcuserstate
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+
+# Certificates, Keys, & Provisioning Profiles
+*.mobileprovision
+*.p12
+*.cer
+*.key
+**/ExportOptions.plist
+
+# Swift Package Manager
+.build/
+Packages/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# CocoaPods (if any)
+Pods/
+
+# Temporary / Scratch Files
+*.tmp
+*.swp
+*.bak
+*~
+.opencode/tmp/
+

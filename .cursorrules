@@ -1,0 +1,37 @@
+# Kurin — Cursor Rules
+
+This file is read automatically by Cursor. For the full project guide, see `AGENTS.md`.
+
+## Quick Reference
+
+- **Platform:** iOS 27 (iPhone 17) · watchOS 11 (Apple Watch Series 11)
+- **Language:** Swift 6+ · SwiftUI · SwiftData · HealthKit
+- **Architecture:** Clean Architecture with Repo + Service layer (no protocols) inside a single target
+- **Source of Truth:** `docs/Feature/<feature-id>-<feature-slug>/requirement.md` + `docs/Feature/<feature-id>-<feature-slug>/spec.md`
+
+## Critical Rules (Always Apply)
+
+1. Read `docs/Feature/<feature-id>-<feature-slug>/requirement.md` and `spec.md` before implementing or planning any feature.
+2. No force-unwrap (`!`) or `try!` in production code.
+3. No business logic in SwiftUI Views — use `@Observable` ViewModels.
+4. Repositories and Services are concrete classes — no protocol abstraction.
+5. HealthKit permission denial is not a crash — always provide manual fallback.
+6. Name tests with AC numbers: `test_AC01_...`, `test_AC02_...`
+7. All non-trivial `internal` Service/Repo symbols need `///` DocC comments.
+8. ViewModels call Services only; never call Repositories directly.
+9. Use `async/await` — no `DispatchQueue` in new code.
+10. Store timestamps with device timezone (`TimeZone.current`).
+11. Feature planning & doc authoring is led by `@planner` (no build capability); `@builder` executes verified plans.
+
+## Feature Implementation Order
+
+1. `001-onboarding-health-profile`
+2. `002-training-type-assignment`
+3. `003-weekly-training-plan`
+4. `004-exercise-session-guidance`
+5. `005-rpe-estimation`
+6. `006-training-load-workload`
+7. `007-daily-training-adjustment`
+8. `008-weekly-training-adjustment`
+
+See `.agents/rules/` and `.agents/skills/` for detailed guidance.
