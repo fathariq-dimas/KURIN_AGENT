@@ -48,6 +48,8 @@ Training Type Assignment, and Initial Training Plan responsibilities approved fo
 | Git | Phase 01 branch contract | Base `development` tracks `origin/development` at `dd3204e`; intended target `feat/001-health-screening-flow` does not exist and must not be created before phase approval | Rule 06a; verified Git state 2026-11-10; Phase 01 metadata | Base verified; target creation pending phase approval |
 | Git | Phase 02 branch contract | Intended target `feat/001-health-profile-bmi`; Phase 02 base, synchronization, target-name availability, and executable verification remain unreconciled | Rule 06a; Phase 02 plan §9 | Blocking Phase 02 readiness and branch creation |
 | Git | Phase 03 branch contract | Intended target `feat/001-weight-goal-overview`; Phase 03 base, synchronization, target-name availability, and executable verification remain unreconciled | Rule 06a; Phase 03 plan §9 | Blocking Phase 03 readiness and branch creation |
+| Git | Phase 04 branch contract | Intended target `feat/001-initial-training-plan`; Phase 04 base, synchronization, target-name availability, and executable verification remain unreconciled | Rule 06a; Phase 04 plan §9 | Blocking Phase 04 readiness and branch creation |
+| Git | Phase 05 branch contract | Intended target `feat/001-onboarding-completion`; Phase 05 base, synchronization, target-name availability, and executable verification remain unreconciled | Rule 06a; Phase 05 plan §9 | Blocking Phase 05 readiness and branch creation |
 | Output | Feature 002 Training Plan Dashboard | Persisted assigned `TrainingType` and ordered Initial Training Plan session dates/durations | Requirement §8; Guide 14 Phase 1; user decision 2026-11-11 | Produced after Phase 05 |
 | Output | Feature 003 Exercise Session Guidance | Selected scheduled session, assigned `TrainingType`, and planned duration | Guide 14 Phases 2–3; user decision 2026-11-11 | Routed through Feature 002 after Phase 05 |
 
@@ -60,8 +62,8 @@ Use only: `Draft`, `Ready for Review`, `Approved`, `In Progress`, `Verification`
 | `01 — Health Screening and Disclaimer` | Ordered v1 screening produces the correct issue flag and exact automatic disclaimer/no-disclaimer transition. | `FR-01`–`FR-06`; `AC-01`–`AC-05` | None | Draft | Draft | Draft | Pending `RB-01`, `GOV-01`, reconciled verification procedures, and explicit phase approval |
 | `02 — Health Access, Profile, and BMI` | User skips or uses the exact HealthKit scope, completes only missing profile values, and receives correct provenance/BMI. | `FR-07`–`FR-15`; `AC-06`–`AC-14` | Phase 01 Complete | Draft | Draft | Draft | Detailed early by explicit planning-only authority on 2026-11-10; non-executable pending Phase 01 Complete, `RB-01`, `GOV-01`, branch/base/verification reconciliation, and explicit phase approval |
 | `03 — Weight Goal and Overview` | User enters a positive target and reviews the complete informational goal overview. | `FR-16`–`FR-17`; `AC-15`–`AC-16` | Phase 02 Complete | Draft | Draft | Draft | Detailed early by explicit planning-only authority on 2026-11-10; non-executable pending Phases 01–02 Complete, `RB-01`, `GOV-01`, branch/base/verification reconciliation, and explicit phase approval |
-| `04 — Assignment, Schedule, and Initial Plan` | Correct training type, allowed schedule, start date, and time-zone-stable first-week sessions are generated. | `FR-18`–`FR-27`; `AC-17`–`AC-27` | Phase 03 Complete | Draft | Draft | Draft | Locked until Phase 03 Complete |
-| `05 — Review, Persistence, and Completion` | User reviews and confirms the plan; atomic save controls completion/retry and incomplete relaunch restart. | `FR-28`–`FR-31`; `AC-28`–`AC-31` | Phase 04 Complete | Draft | Draft | Draft | Locked until Phase 04 Complete |
+| `04 — Assignment, Schedule, and Initial Plan` | Correct training type, allowed schedule, start date, and time-zone-stable first-week sessions are generated. | `FR-18`–`FR-27`; `AC-17`–`AC-27` | Phase 03 Complete | Draft | Draft | Draft | Detailed early by explicit planning-only authority on 2026-11-11; non-executable pending Phases 01–03 Complete, `RB-01`, `GOV-01`, branch/base/verification reconciliation, and explicit phase approval |
+| `05 — Review, Persistence, and Completion` | User reviews and confirms the plan; atomic save controls completion/retry and incomplete relaunch restart. | `FR-28`–`FR-31`; `AC-28`–`AC-31` | Phase 04 Complete | Draft | Draft | Draft | Detailed early by explicit planning-only authority on 2026-11-11; non-executable pending Phases 01–04 Complete, `RB-01`, `GOV-01`, branch/base/verification reconciliation, and explicit phase approval |
 
 Coverage audit: the five phases cover every `FR-01`–`FR-31` and `AC-01`–`AC-31` exactly once, with no gap or
 overlap.
@@ -83,6 +85,8 @@ The Product catalog/copy follow-up is explicitly non-blocking and is not an open
 |---|---|---|---|
 | `PA-01` | Explicit user decision, 2026-11-10 | Detail `phase-02-health-access-profile-and-bmi.md` before Phase 01 completion because the current focus is completing planning | Phase 02 approval, eligibility, implementation parallelism, branch creation, builder handoff, or bypass of Phase 01/`RB-01`/`GOV-01`/verification gates |
 | `PA-02` | Explicit user decision, 2026-11-10 | Detail `phase-03-weight-goal-and-overview.md` before Phases 01–02 complete because the current focus is completing planning | Phase 03 approval, eligibility, implementation parallelism, branch creation, builder handoff, or bypass of predecessor/`RB-01`/`GOV-01`/verification gates |
+| `PA-03` | Explicit user request, 2026-11-11 | Detail `phase-04-assignment-schedule-and-initial-plan.md` before Phases 01–03 complete | Phase 04 approval, eligibility, implementation parallelism, branch creation, builder handoff, or bypass of predecessor/`RB-01`/`GOV-01`/verification gates |
+| `PA-04` | Explicit user request, 2026-11-11 | Detail `phase-05-review-persistence-and-completion.md` before Phases 01–04 complete | Phase 05 approval, eligibility, implementation parallelism, branch creation, builder handoff, or bypass of predecessor/`RB-01`/`GOV-01`/verification gates |
 
 ## 5. Current Phase Gate
 
@@ -90,6 +94,8 @@ The Product catalog/copy follow-up is explicitly non-blocking and is not an open
 - **Detailed phase plan:** `phase-01-health-screening-and-disclaimer.md`
 - **Additional planning-only detail:** `phase-02-health-access-profile-and-bmi.md` remains Draft and non-executable under `PA-01`
 - **Additional planning-only detail:** `phase-03-weight-goal-and-overview.md` remains Draft and non-executable under `PA-02`
+- **Additional planning-only detail:** `phase-04-assignment-schedule-and-initial-plan.md` remains Draft and non-executable under `PA-03`
+- **Additional planning-only detail:** `phase-05-review-persistence-and-completion.md` remains Draft and non-executable under `PA-04`
 - **User approval:** Not eligible while `RB-01` prevents source/target/verification reconciliation; phase remains Draft
 - **Builder handoff:** Locked by `RB-01`, `GOV-01`, and missing explicit phase approval
 
