@@ -59,7 +59,7 @@ Example prompt:
 ```text
 Choose the base branch:
 1. development (Recommended)
-2. feat/002-training-assignment
+2. feat/002-training-dashboard
 3. main
 
 Reply with a number or branch name.

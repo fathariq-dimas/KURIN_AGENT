@@ -15,6 +15,10 @@ The user selects training days, available frequency/duration values based on the
 
 The system enforces Monday through Sunday as the standard calendar week boundaries.
 
+After Feature 001 persists the confirmed onboarding result and Initial Training Plan, the app presents Feature 002
+Training Plan Dashboard. The dashboard is the initial post-onboarding destination and later receives refreshed plan
+state from Daily and Weekly Training Adjustment (explicit user decision, 2026-11-11).
+
 ### Phase 2 — Exercise Preparation
 
 The user selects a scheduled exercise session from the Home screen.

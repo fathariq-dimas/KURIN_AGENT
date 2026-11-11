@@ -97,7 +97,7 @@ flowchart TD
     ```swift
     /// Calculates the recommended weekly training volume based on current BMI and screening.
     ///
-    /// Source: docs/Feature/003-weekly-training-plan/spec.md (FR-03, AC-02)
+    /// Source: docs/Feature/001-onboarding-health-profile/spec.md (FR-18–FR-31)
     ```
 
 ### Stage 3: Presentation Layer

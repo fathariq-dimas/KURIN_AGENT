@@ -35,7 +35,7 @@ docs/Feature/<feature-id>-<feature-slug>/spec.md           ← data models, flow
 
 ## Feature Order
 
-1. `001-onboarding-health-profile` → 2. `002-training-type-assignment` → 3. `003-weekly-training-plan` → 4. `004-exercise-session-guidance` → 5. `005-rpe-estimation` → 6. `006-training-load-workload` → 7. `007-daily-training-adjustment` → 8. `008-weekly-training-adjustment`
+`001-onboarding-health-profile` → `002-training-plan-dashboard` → `003-exercise-session-guidance` → `004-rpe-estimation` → `005-training-load-workload` → (`006-daily-training-adjustment` / `007-weekly-training-adjustment`) → `002-training-plan-dashboard`
 
 ## Agent Toolkit
 

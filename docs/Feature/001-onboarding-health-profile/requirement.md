@@ -11,8 +11,9 @@
 
 Feature 001 owns the complete first-run journey from Health Screening through creation and local persistence of an
 Initial Training Plan. It includes profile confirmation, BMI and weight-goal presentation, Training Type Assignment,
-schedule configuration, plan review, and completion. Feature IDs 002 and 003 remain reserved; their former assignment
-and initial-plan responsibilities are integrated into Feature 001.
+schedule configuration, plan review, and completion. Training Type Assignment and Initial Training Plan generation
+remain integrated into Feature 001 rather than standalone features. Active downstream feature IDs were renumbered by
+explicit user decision on 2026-11-11; Feature 002 is now the Training Plan Dashboard.
 
 The flow starts with Health Screening. It does not include a separate name-entry step or workout reminder/time setup.
 Real-time exercise guidance and every post-session evaluation or adjustment remain downstream behavior.
@@ -133,7 +134,7 @@ Product should later replace or review them, but that follow-up is non-blocking 
 
 | Excluded item | Reason | Source |
 |---|---|---|
-| Separate Feature 002 or Feature 003 implementations | Training Type Assignment and Initial Training Plan generation are integrated into Feature 001; IDs 002/003 are reserved. | `docs/README.md`; user decision 2026-11-10 |
+| Standalone Training Type Assignment or Initial Training Plan features | Both responsibilities are integrated into Feature 001 and do not receive separate active feature IDs. | `docs/README.md`; user decisions 2026-11-10 and 2026-11-11 |
 | Name collection and workout reminder/time setup | They are omitted from the approved Feature 001 flow. | Guide 2 §2.4 planning decision; Guide 14 Phase 1; user decision 2026-11-10 |
 | HealthKit reads beyond DOB, height, and body weight | Future features request their own required metrics contextually. | Rule 01 HealthKit; user decision 2026-11-10 |
 | Persisting or resuming an incomplete onboarding draft after relaunch | The approved flow restarts until an atomic completion succeeds. | User decision 2026-11-10 |
@@ -148,7 +149,7 @@ Product should later replace or review them, but that follow-up is non-blocking 
 
 | ID | Decision | Authority |
 |---|---|---|
-| `UD-01` | Restart the documentation workflow only; preserve dated product decisions. Feature 001 integrates onboarding, assignment, and Initial Training Plan; IDs 002/003 remain reserved; omit name and reminder/time. | Explicit user decision, 2026-11-10 |
+| `UD-01` | Restart the documentation workflow only; preserve dated product decisions. Feature 001 integrates onboarding, assignment, and Initial Training Plan; omit name and reminder/time. The former reserved IDs were reassigned by the approved 2026-11-11 renumbering. | Explicit user decisions, 2026-11-10 and 2026-11-11 |
 | `UD-02` | Use three ordered closed multi-select screening catalogs, no free text, and an exclusive `None`; every positive selection sets `hasHealthIssue`, assigns Easy Walking, and triggers a non-blocking automatic disclaimer. | Explicit user decision, 2026-11-10 |
 | `UD-03` | Use continuous BMI categories, unrounded decision values, one-decimal UI values, minimal positive-value validation, no age gate, and an informational target range. | Explicit user decision, 2026-11-10 |
 | `UD-04` | Request only DOB, height, and body weight during onboarding; allow Skip, Retry, and Continue Manually; keep HealthKit read-only and manual edits local. | Explicit user decision, 2026-11-10 |
@@ -167,7 +168,8 @@ Product should later replace or review them, but that follow-up is non-blocking 
 | External | HealthKit | Read-only access for DOB, height, and body weight with privacy-preserving unavailable behavior. | Guide 2 §2.4; Rule 01; user decision 2026-11-10 |
 | External | Local persistence | Atomic local save of the confirmed onboarding result; no remote synchronization. | `FR-29`, `FR-30`; user decision 2026-11-10 |
 | Governance | Architecture rules | Rule 02 must be synchronized to the approved concrete repository/service rule before builder handoff. | User decision 2026-11-10 |
-| Downstream | Feature 004 Exercise Session Guidance | Consumes the assigned Training Type and ordered Initial Training Plan session dates/durations after Feature 001 completes. | Guide 14 Phases 1–3 |
+| Downstream | Feature 002 Training Plan Dashboard | Becomes the post-onboarding destination and consumes the persisted Initial Training Plan. | Guide 14 Phase 1; user decision 2026-11-11 |
+| Downstream | Feature 003 Exercise Session Guidance | Consumes a scheduled session, assigned Training Type, and duration after selection from the dashboard. | Guide 14 Phases 2–3; user decision 2026-11-11 |
 
 ### Authoritative V1 Screening Content
 

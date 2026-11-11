@@ -39,7 +39,7 @@ Onboarding flow:
 7. **Final Assessment:** The system determines the Training Type track as well as frequency and duration options according to the user's criteria (Section 3.3 and Section 4).
 8. The user selects allowed frequency/duration values, training days, and a start date before the system creates the Initial Training Plan. Easy Walking remains fixed at 3 sessions per week and 15 minutes per session while the user chooses the three weekdays.
 
-> **Planning decision (2026-11-10):** Health Screening is the first onboarding activity. A separate name-entry step and workout-reminder time are not part of the authoritative Feature 001 flow. Training Type Assignment and Initial Training Plan creation are owned by Feature 001 rather than separate Feature 002/003 implementations.
+> **Planning decisions (2026-11-10 and 2026-11-11):** Health Screening is the first onboarding activity. A separate name-entry step and workout-reminder time are not part of the authoritative Feature 001 flow. Training Type Assignment and Initial Training Plan creation are owned by Feature 001 rather than standalone features. After successful onboarding, the app presents Feature 002 Training Plan Dashboard. Active feature IDs were renumbered by explicit user decision on 2026-11-11.
 
 **Data planned to be retrieved from Apple Health:**
 
