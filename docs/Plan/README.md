@@ -1,5 +1,9 @@
 # Feature Master Roadmaps and Implementation Phases
 
+[`master-plan.md`](master-plan.md) is the portfolio-level feature index and lifecycle map. It records active IDs,
+documentation status, and the `001 → 002 → 003 → 004 → 005 → (006 / 007) → 002` feedback flow.
+It is not an implementation roadmap and cannot replace any feature's approval gates.
+
 Setiap feature memiliki satu folder master roadmap:
 
 ```text

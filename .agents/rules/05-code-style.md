@@ -64,7 +64,7 @@
 - Business-rule formulas must cite their FR number and source document on the line above:
   ```swift
   // FR-03: W = min(10, 5 + floor((D - 15) / 15))
-  // Source: docs/Feature/004-exercise-session-guidance/requirement.md
+  // Source: docs/Feature/003-exercise-session-guidance/requirement.md
   let warmUp = min(10, 5 + (totalMinutes - 15) / 15)
   ```
 - Inline comments (`//`) are for non-obvious logic only. Do not comment what the code obviously does.

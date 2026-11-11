@@ -72,13 +72,12 @@ Kurin/                             # Root repository
 │   ├── README.md
 │   ├── Feature/
 │   │   ├── 001-onboarding-health-profile/
-│   │   ├── 002-training-type-assignment/
-│   │   ├── 003-weekly-training-plan/
-│   │   ├── 004-exercise-session-guidance/
-│   │   ├── 005-rpe-estimation/
-│   │   ├── 006-training-load-workload/
-│   │   ├── 007-daily-training-adjustment/
-│   │   └── 008-weekly-training-adjustment/
+│   │   ├── 002-training-plan-dashboard/
+│   │   ├── 003-exercise-session-guidance/
+│   │   ├── 004-rpe-estimation/
+│   │   ├── 005-training-load-workload/
+│   │   ├── 006-daily-training-adjustment/
+│   │   └── 007-weekly-training-adjustment/
 │   └── Plan/                      # <feature-id>-<feature-slug>/roadmap.md + phase plans
 ├── Kurin.xcodeproj/
 └── Kurin/                         # Root source synced by Xcode
@@ -149,15 +148,20 @@ All mandatory rules live in `.agents/rules/`. Load the relevant rule before star
 | # | Feature | Docs Folder | Key Dependency |
 |---|---------|-------------|----------------|
 | 1 | Onboarding, Health Screening & Profile | `Feature/001-onboarding-health-profile` | — |
-| 2 | Training Type Assignment | `Feature/002-training-type-assignment` | Feature 1 |
-| 3 | Weekly Training Plan | `Feature/003-weekly-training-plan` | Feature 2 |
-| 4 | Exercise Session Guidance | `Feature/004-exercise-session-guidance` | Feature 3 |
-| 5 | RPE Estimation & Confirmation | `Feature/005-rpe-estimation` | Feature 4 |
-| 6 | Training Load & Workload Metrics | `Feature/006-training-load-workload` | Feature 5 |
-| 7 | Daily Training Adjustment | `Feature/007-daily-training-adjustment` | Feature 6 |
-| 8 | Weekly Training Adjustment | `Feature/008-weekly-training-adjustment` | Feature 6 |
+| 2 | Training Plan Dashboard | `Feature/002-training-plan-dashboard` | Feature 1 initially; Features 6–7 refresh it |
+| 3 | Exercise Session Guidance | `Feature/003-exercise-session-guidance` | Feature 2 scheduled session |
+| 4 | RPE Estimation & Confirmation | `Feature/004-rpe-estimation` | Feature 3 |
+| 5 | Training Load & Workload Metrics | `Feature/005-training-load-workload` | Feature 4 |
+| 6 | Daily Training Adjustment | `Feature/006-daily-training-adjustment` | Feature 5; loops to Feature 2 |
+| 7 | Weekly Training Adjustment | `Feature/007-weekly-training-adjustment` | Feature 5; loops to Feature 2 |
 
-Implement features in the order above. Do **not** jump ahead — later features depend on data models from earlier ones.
+Implement the initial path in order, then preserve the adjustment feedback loops:
+
+```text
+001 → 002 → 003 → 004 → 005 → (006 / 007) → 002
+```
+
+Do **not** jump ahead — later features depend on data models from earlier ones.
 
 ---
 

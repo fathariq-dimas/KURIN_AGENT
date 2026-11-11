@@ -97,7 +97,7 @@ Path: `Kurin/iOS/Features/<Feature>/Domain/Services/<ServiceName>.swift`
 
   /// Service orchestrating weekly training plan calculations and progression.
   ///
-  /// Source: docs/Feature/003-weekly-training-plan/spec.md
+  /// Source: docs/Feature/001-onboarding-health-profile/spec.md
   public final class WeeklyPlanService: Sendable {
       private let repository: WeeklyPlanRepository
 

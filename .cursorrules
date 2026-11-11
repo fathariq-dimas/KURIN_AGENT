@@ -26,12 +26,13 @@ This file is read automatically by Cursor. For the full project guide, see `AGEN
 ## Feature Implementation Order
 
 1. `001-onboarding-health-profile`
-2. `002-training-type-assignment`
-3. `003-weekly-training-plan`
-4. `004-exercise-session-guidance`
-5. `005-rpe-estimation`
-6. `006-training-load-workload`
-7. `007-daily-training-adjustment`
-8. `008-weekly-training-adjustment`
+2. `002-training-plan-dashboard`
+3. `003-exercise-session-guidance`
+4. `004-rpe-estimation`
+5. `005-training-load-workload`
+6. `006-daily-training-adjustment`
+7. `007-weekly-training-adjustment`
+
+Adjustment outputs from Features 006 and 007 refresh Feature 002.
 
 See `.agents/rules/` and `.agents/skills/` for detailed guidance.

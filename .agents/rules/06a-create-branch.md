@@ -34,13 +34,12 @@ Feature and bug-fix branches use the three-digit Task ID from the implementation
 | Task ID | Feature docs folder | Feature |
 | :---: | --- | --- |
 | `001` | `docs/Feature/001-onboarding-health-profile` | Onboarding, Health Screening & Profile |
-| `002` | `docs/Feature/002-training-type-assignment` | Training Type Assignment |
-| `003` | `docs/Feature/003-weekly-training-plan` | Weekly Training Plan |
-| `004` | `docs/Feature/004-exercise-session-guidance` | Exercise Session Guidance |
-| `005` | `docs/Feature/005-rpe-estimation` | RPE Estimation & Confirmation |
-| `006` | `docs/Feature/006-training-load-workload` | Training Load & Workload Metrics |
-| `007` | `docs/Feature/007-daily-training-adjustment` | Daily Training Adjustment |
-| `008` | `docs/Feature/008-weekly-training-adjustment` | Weekly Training Adjustment |
+| `002` | `docs/Feature/002-training-plan-dashboard` | Training Plan Dashboard |
+| `003` | `docs/Feature/003-exercise-session-guidance` | Exercise Session Guidance |
+| `004` | `docs/Feature/004-rpe-estimation` | RPE Estimation & Confirmation |
+| `005` | `docs/Feature/005-training-load-workload` | Training Load & Workload Metrics |
+| `006` | `docs/Feature/006-daily-training-adjustment` | Daily Training Adjustment |
+| `007` | `docs/Feature/007-weekly-training-adjustment` | Weekly Training Adjustment |
 
 For a feature subtask, use the parent feature ID in the branch name. Track finer-grained identifiers such as `001-1` in planning or issue metadata rather than changing the three-digit branch prefix.
 
@@ -57,7 +56,7 @@ For a feature subtask, use the parent feature ID in the branch name. Track finer
 Examples:
 
 - `feat/001-health-screening-flow`
-- `fix/004-hr-zone2-audio-alert`
+- `fix/003-hr-zone2-audio-alert`
 - `refactor/session-viewmodel-state`
 - `docs/split-git-workflow-rules`
 - `test/001-onboarding-acceptance-criteria`

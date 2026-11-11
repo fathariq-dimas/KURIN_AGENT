@@ -25,11 +25,12 @@ Training Type Assignment, and Initial Training Plan responsibilities approved fo
 
 ### Excluded and Downstream
 
-- Feature IDs 002 and 003 have no separate implementation; their initial responsibilities are integrated here.
+- Training Type Assignment and Initial Training Plan generation have no separate implementation; their responsibilities are integrated here.
 - Name collection, workout reminder/time setup, remote sync, and persisted incomplete onboarding drafts.
 - HealthKit reads beyond DOB, height, and body mass; future features request their own data contextually.
-- Feature 004 owns exercise preparation and guidance after consuming the assigned type and scheduled sessions.
-- Features 005–008 own RPE, training load/workload, and daily/weekly adjustment.
+- Feature 002 owns the post-onboarding Training Plan Dashboard that presents this feature's persisted plan.
+- Feature 003 owns exercise preparation and guidance after consuming a selected scheduled session.
+- Features 004–007 own RPE, training load/workload, and daily/weekly adjustment.
 - The non-blocking Product follow-up may replace the placeholder-labelled v1 catalogs and review disclaimer copy only
   through a later approved requirements revision; current v1 content remains authoritative meanwhile.
 
@@ -47,7 +48,8 @@ Training Type Assignment, and Initial Training Plan responsibilities approved fo
 | Git | Phase 01 branch contract | Base `development` tracks `origin/development` at `dd3204e`; intended target `feat/001-health-screening-flow` does not exist and must not be created before phase approval | Rule 06a; verified Git state 2026-11-10; Phase 01 metadata | Base verified; target creation pending phase approval |
 | Git | Phase 02 branch contract | Intended target `feat/001-health-profile-bmi`; Phase 02 base, synchronization, target-name availability, and executable verification remain unreconciled | Rule 06a; Phase 02 plan §9 | Blocking Phase 02 readiness and branch creation |
 | Git | Phase 03 branch contract | Intended target `feat/001-weight-goal-overview`; Phase 03 base, synchronization, target-name availability, and executable verification remain unreconciled | Rule 06a; Phase 03 plan §9 | Blocking Phase 03 readiness and branch creation |
-| Output | Feature 004 Exercise Session Guidance | Persisted assigned `TrainingType` and ordered Initial Training Plan session dates/durations | Requirement §8; Guide 14 Phases 1–3 | Produced after Phase 05 |
+| Output | Feature 002 Training Plan Dashboard | Persisted assigned `TrainingType` and ordered Initial Training Plan session dates/durations | Requirement §8; Guide 14 Phase 1; user decision 2026-11-11 | Produced after Phase 05 |
+| Output | Feature 003 Exercise Session Guidance | Selected scheduled session, assigned `TrainingType`, and planned duration | Guide 14 Phases 2–3; user decision 2026-11-11 | Routed through Feature 002 after Phase 05 |
 
 ## 3. Phase Status
 

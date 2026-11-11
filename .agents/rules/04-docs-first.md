@@ -49,7 +49,7 @@ Every implementation decision that stems from a documented rule should leave a b
 
 ```swift
 // FR-05: HR Zone 2 guidance is only active for HR Zone 2 Activity training type.
-// Source: docs/Feature/004-exercise-session-guidance/requirement.md
+// Source: docs/Feature/003-exercise-session-guidance/requirement.md
 ```
 
 This makes future code reviews and onboarding faster.
@@ -58,7 +58,7 @@ This makes future code reviews and onboarding faster.
 
 If a user or another agent asks you to implement something marked **Out of Scope** in a `requirement.md`, refuse politely and cite the document. Example:
 
-> "The `docs/Feature/004-exercise-session-guidance/requirement.md` lists 'determination of Zone 2 bounds from health profile' as out of scope for this feature. Please raise this as a product decision before I implement it."
+> "The `docs/Feature/003-exercise-session-guidance/requirement.md` lists 'determination of Zone 2 bounds from health profile' as out of scope for this feature. Please raise this as a product decision before I implement it."
 
 ## Feature Dependencies
 
@@ -66,13 +66,12 @@ Respect the implementation order from `docs/README.md`:
 
 ```
 001-onboarding-health-profile
-  → 002-training-type-assignment
-    → 003-weekly-training-plan
-      → 004-exercise-session-guidance
-        → 005-rpe-estimation
-          → 006-training-load-workload
-            → 007-daily-training-adjustment
-            → 008-weekly-training-adjustment
+  → 002-training-plan-dashboard
+    → 003-exercise-session-guidance
+      → 004-rpe-estimation
+        → 005-training-load-workload
+          → (006-daily-training-adjustment / 007-weekly-training-adjustment)
+            → 002-training-plan-dashboard
 ```
 
 Do not implement a downstream feature if its upstream dependency data models don't exist yet.

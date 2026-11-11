@@ -11,7 +11,8 @@
 ## 1. Scope and Layer Placement
 
 Feature 001 owns the first-run flow from diagnoses screening through successful local persistence of the confirmed
-Initial Training Plan. Feature IDs 002 and 003 remain reserved and have no separate implementation.
+Initial Training Plan. Training Type Assignment and Initial Training Plan generation remain integrated here;
+Feature 002 is the post-onboarding Training Plan Dashboard under the user-approved 2026-11-11 numbering.
 
 The paths below follow the canonical single-target layout in `AGENTS.md`. The implementation workspace is not present
 in this checkout, so the paths and target membership must be reconciled against the restored Xcode project before a
@@ -416,7 +417,7 @@ None. All material v1 product and technical decisions required by this specifica
 ## 10. Quality Gate
 
 - [x] The source requirement is explicitly approved and contains no material v1 open decision.
-- [x] Scope stays within integrated Feature 001 and records Feature 004 only as a downstream consumer.
+- [x] Scope stays within integrated Feature 001 and records Features 002 and 003 only as downstream consumers.
 - [x] Data types, states, validation, formulas, errors, and layer contracts map to approved FRs.
 - [x] Every `AC-01` through `AC-31` has one objective planned verification.
 - [x] None selection, exact v1 catalog values, automatic no-ack disclaimer, and exact copy are specified.
