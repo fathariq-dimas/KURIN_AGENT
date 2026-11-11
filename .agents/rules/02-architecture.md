@@ -7,18 +7,26 @@
 
 ## Project Structure
 
+### Folder di repository
+
 ```text
-Kurin/                             # Root repository
+Kurin/                                      # Root repository
+├── ARCHITECTURE.md
 ├── Kurin.xcodeproj/
-│   ├── project.pbxproj
+│   ├── project.pbxproj                     # Target, source membership, dan capability
 │   ├── project.xcworkspace/
 │   └── xcuserdata/
-└── Kurin/                         # Root source synced by Xcode
+└── Kurin/                                  # Root source
     ├── iOS/
     │   ├── App/
-    │   │   ├── KurinApp.swift
-    │   │   └── ContentView.swift
+    │   │   ├── KurinApp.swift              # Entry point aplikasi utama
+    │   │   ├── RootView.swift              # Host awal; juga memuat RootTabView
+    │   │   ├── SplashView.swift            # Tampilan splash, masih placeholder
+    │   │   ├── AppCoordinator.swift        # Masih placeholder
+    │   │   └── AppTabRoute.swift           # Masih placeholder
     │   ├── Core/
+    │   │   ├── Domain/
+    │   │   ├── Data/
     │   │   ├── DesignSystem/
     │   │   └── Extensions/
     │   ├── Features/
@@ -26,127 +34,232 @@ Kurin/                             # Root repository
     │   │   ├── Onboarding/
     │   │   ├── Profile/
     │   │   ├── TrackingSession/
+    │   │   │   ├── Domain/
+    │   │   │   ├── Data/
+    │   │   │   └── Presentation/
     │   │   └── TrainingProgress/
-    │   ├── Resources/
-    │   │   └── Assets.xcassets/
-    │   └── Shared/
-    │       ├── Data/
-    │       ├── Domain/
-    │       └── Presentation/
+    │   │       ├── Domain/
+    │   │       └── Presentation/
+    │   └── Resources/
+    │       └── Assets.xcassets/
     └── WatchOS/
+        ├── App/
+        │   └── KurinWatchApp.swift         # Entry point aplikasi Watch
+        ├── Features/
+        │   └── TrackingSession/
+        │       ├── Domain/
+        │       ├── Data/
+        │       └── Presentation/
+        ├── Resources/
+        │   └── Info.plist                 # Companion, deskripsi izin, dan background mode
+        └── KurinWatch.entitlements         # Capability HealthKit
 ```
 
-Every folder inside `Features/<Feature>/` and `Shared/` follows the same internal layout:
+File ditempatkan langsung di **Domain**, **Data**, atau **Presentation**. Tidak diperlukan subfolder per jenis file pada tahap ini. Fitur yang belum dikembangkan tidak harus langsung memiliki seluruh lapisan; TrainingProgress dapat memakai akses data Core sehingga belum memiliki Data sendiri.
+
+> Folder fitur merupakan pengelompokan source dalam target aplikasi masing-masing platform, bukan Swift Package atau modul kompilasi terpisah. Batas antarlapisan dan antarfitur dijaga melalui implementasi serta review kode.
+
+Folder fitur dan Core masih kosong. Git belum melacak folder kosong karena tidak ada file penanda.
+
+### Group di Xcode Project Navigator
 
 ```text
-Data/
-├── Models/        # SwiftData @Model classes and Sendable value structs
-└── Repositories/  # Concrete implementations of domain repository protocols
-Domain/
-├── Models/        # Framework-independent session, status, and metric types
-├── Repositories/  # Protocols for recording and persistence boundaries
-└── Services/      # Business logic; orchestrates one or more repositories
-Presentation/
-├── Coordinators/  # Navigation / flow coordination
-├── SupportViews/  # Reusable sub-views scoped to this feature
-├── ViewModels/    # @Observable view-models; call Services, never Repositories directly
-└── Views/         # SwiftUI screens and components
+Kurin                                      # Project di Xcode
+├── Kurin                                  # Source aplikasi
+│   ├── iOS
+│   └── WatchOS
+├── Products                               # Referensi hasil build
+│   ├── Kurin.app
+│   └── KurinWatch.app
+└── Frameworks                             # Referensi dependensi SDK
+    └── HealthKit.framework
 ```
 
-> These folders are **source-code groupings inside a single Xcode target** — not separate Swift Packages, frameworks, or compilation modules. Boundaries between layers and features are enforced by convention and code review, not the build system.
+- **Products** menampilkan produk dari target Kurin dan KurinWatch. Bundle sebenarnya dibuat pada direktori output build Xcode, biasanya DerivedData; group dapat terlihat sebelum hasil build tersedia.
+- **Frameworks** memuat referensi HealthKit dari SDK Apple, yang saat ini ditautkan ke target KurinWatch. Framework ini tidak disalin menjadi source di repository.
+- Keduanya adalah group logis yang didefinisikan pada [project.pbxproj](Kurin.xcodeproj/project.pbxproj), bukan folder fisik tambahan di luar folder source.
 
----
+## Layer Boundaries — Clean Architecture dengan Repository dan Service
 
-## Layer Boundaries (Clean Architecture — Repo + Service)
-
-```
-View  →  ViewModel  →  Service  →  Repository  →  (HealthKit / SwiftData)
-```
-
-| Layer | Location | Responsibility | Rule |
-|-------|----------|----------------|------|
-| **View** | `Presentation/Views/`, `Presentation/SupportViews/` | Layout and data binding only | Zero business logic; reads from ViewModel only |
-| **Coordinator** | `Presentation/Coordinators/` | Navigation flow between screens | No data fetching; push/pop/present Views only |
-| **ViewModel** | `Presentation/ViewModels/` | UI state; calls Services | Use `@Observable`; never call a Repository directly |
-| **Service** | `Domain/Services/` | Business rules; orchestrates Repositories | Pure Swift; depends on domain repository protocols, never concrete Data implementations |
-| **Repository contract** | `Domain/Repositories/` | Defines recording and persistence capabilities required by the Domain | Protocols use framework-independent domain types only |
-| **Repository implementation** | `Data/Repositories/` | Data access; maps raw types to domain models | Implements domain protocols using HealthKit or persistence; no business logic |
-| **Domain model** | `Domain/Models/` | Session, status, and metric semantics | Pure Swift; no SwiftUI, HealthKit, or WatchConnectivity types |
-| **Data model** | `Data/Models/` | DTOs and persistence representations | `@Model` for SwiftData entities; maps to and from domain models |
-
-### Call Direction
-
-```
-View ──▶ ViewModel ──▶ Service ──▶ Repository ──▶ HealthKit / SwiftData
-```
-
-- A layer may **only call the layer immediately below it** — no skipping.
-- Repository implementations are **concrete classes** that conform to narrowly scoped protocols defined by the Domain.
-- Services are **concrete classes** injected into ViewModels via their initializer (constructor injection).
-
-### Core vs Shared vs Feature
-
-- Code used by **one feature only** lives inside that feature's folder hierarchy.
-- Code used by **two or more features** moves to `Shared/` under the same `Data/Domain/Presentation` structure.
-- `Core/DesignSystem/` contains application-wide visual primitives such as semantic colors, typography, spacing, and corner-radius tokens.
-- `Core/Extensions/` contains general-purpose Swift and Foundation extensions.
-
----
-
-## Responsible
-
-### Presentation — MVVM
-
-- `Views` dan `SupportViews` menampilkan informasi latihan dan menerima interaksi user.
-- `ViewModels` menyediakan state tampilan, meneruskan aksi ke service domain, serta memetakan hasil dan error menjadi UI.
-- `Coordinators`, bila diperlukan, mengatur navigasi; pengelolaan perekaman tetap berada di luar coordinator.
-
-### Domain — Aturan Bisnis dan Kontrak
-
-- `Models` mendefinisikan makna data sesi, status, serta metrik yang diperlukan fitur.
-- `Services` menangani aturan transisi dan operasi sesi melalui protokol repository.
-- `Repositories` mendefinisikan protokol akses perekaman atau penyimpanan yang dibutuhkan domain.
-- Domain menggunakan tipe yang bebas dari SwiftUI, HealthKit, dan WatchConnectivity. Tipe framework dipetakan menjadi tipe domain oleh adapter di lapisan data.
-
-### Data — Implementasi Integrasi
-
-- `Repositories` mengimplementasikan protokol domain menggunakan HealthKit dan penyimpanan yang nantinya dipilih.
-- `Models` menampung DTO atau representasi persistensi, dengan pemetaan ke model domain.
-- Adapter framework mengelola callback, error, dan pengiriman perubahan sesi ke domain; ViewModel tidak mengakses objek HealthKit secara langsung.
-
-### App — Penyusunan Dependensi
-
-- Membuat implementasi repository, service, dan ViewModel, lalu memasangnya pada root view.
-- Mempertahankan lifecycle komponen perekaman selama sesi aktif, terlepas dari pergantian view.
-- Meneruskan konfigurasi yang diterima delegate ke alur aplikasi. Delegate tidak menyimpan seluruh aturan bisnis sesi.
-
-Diagram berikut menunjukkan **arah dependensi kode**, bukan urutan pengiriman pesan antarperangkat:
+### Alur pemanggilan
 
 ```mermaid
 flowchart LR
-    P["Presentation: View dan ViewModel"] --> D["Domain: model, service, protokol repository"]
-    R["Data: implementasi repository"] --> D
-    R --> F["HealthKit / penyimpanan / transport"]
-    A["App: penyusunan dependensi"] --> P
+    V["View"] --> VM["ViewModel"]
+    VM --> S["Service"]
+    S --> C["Kontrak Repository"]
+    C -.-> R["Implementasi Repository"]
+    R --> H["HealthKit / sumber penyimpanan"]
+```
+
+View menyampaikan aksi ke ViewModel. ViewModel menggunakan Service untuk menjalankan operasi fitur. Service memakai kontrak Repository milik Domain, sementara implementasinya mengakses sumber data dan mengembalikan model domain.
+
+### Batas setiap komponen
+
+- **View — Presentation:** layout, tampilan state, dan interaksi pengguna. Operasi bisnis serta akses data diteruskan melalui ViewModel.
+- **ViewModel — Presentation:** loading, error, dan state layar. Menggunakan Service; tidak memanggil implementasi Repository atau framework data secara langsung.
+- **Coordinator — App atau Presentation fitur:** perpindahan halaman dan alur navigasi. Tidak mengambil data atau memiliki logika perekaman.
+- **Service — Domain:** aturan bisnis, validasi operasi, dan koordinasi satu atau beberapa kontrak Repository. Tidak bergantung pada implementasi Data.
+- **Kontrak Repository — Domain:** batas kemampuan akses data, perekaman, atau penyimpanan yang dibutuhkan aturan bisnis. Menggunakan tipe domain yang bebas dari framework perangkat.
+- **Implementasi Repository — Data:** query, akses perangkat, persistensi, dan pemetaan hasil ke model domain. Aturan bisnis tetap berada pada Service.
+- **Model domain — Domain:** makna sesi, status, profil, atau metrik bagi aplikasi. Tidak membawa tipe SwiftUI, HealthKit, atau WatchConnectivity.
+- **Model data — Data, bila diperlukan:** representasi khusus integrasi, transfer, atau penyimpanan. Dibuat hanya ketika kebutuhan formatnya berbeda dari model domain.
+
+### Arah dependensi
+
+Diagram sebelumnya menggambarkan pemanggilan saat runtime. Arah dependensi kode tetap menuju Domain:
+
+```mermaid
+flowchart LR
+    P["Presentation"] --> D["Domain: model, Service, kontrak Repository"]
+    R["Data: implementasi Repository"] --> D
+    R --> F["Framework / penyimpanan / transport"]
+    A["App: menyusun dependency"] --> P
     A --> D
     A --> R
 ```
 
-Saat runtime, service menggunakan implementasi repository yang diinjeksi melalui protokol domain. Dengan demikian, Domain tetap tidak bergantung pada implementasi Data. Pemisahan folder perlu disertai disiplin dependensi ini; folder saja belum menjamin Clean Architecture.
+App memberikan implementasi Repository kepada Service, lalu Service diberikan kepada ViewModel. Karena Service hanya mengetahui kontraknya, Domain tidak perlu mengimpor Data atau framework integrasi. Penyusunan dependency nantinya dilakukan langsung di KurinApp, tanpa container tambahan.
 
----
+## Core vs Feature vs Platform
 
-## Protocol Abstraction Rule
+- Kode yang digunakan **satu fitur** ditempatkan pada fitur pemiliknya.
+- Kode yang digunakan **beberapa fitur iOS** ditempatkan di Core iOS dengan pemisahan Domain dan Data sesuai tanggung jawabnya.
+- **Core/DesignSystem** menampung fondasi visual bersama, seperti warna, tipografi, dan spacing.
+- **Core/Extensions** menampung ekstensi umum yang diperlukan aplikasi.
+- Source **iOS** dan **WatchOS** tetap dimiliki platform masing-masing. Tidak ada folder Shared atau Core di luar platform.
+- Fitur boleh menggunakan Core; Core tidak bergantung pada implementasi fitur.
 
-> Protocols are required at Domain boundaries for recording, persistence, or framework integration. Services remain concrete unless multiple implementations create a demonstrated need for abstraction.
+Model kesehatan lintas fitur iOS berada di **iOS/Core/Domain**. Akses HealthKit dan pemetaannya berada di **iOS/Core/Data**. Jika suatu model hanya dibutuhkan TrackingSession, tempatkan di Domain fitur tersebut.
 
-Rationale: Domain repository protocols enforce dependency inversion and prevent HealthKit, persistence, or transport types from leaking into business rules. Extra protocol pairs outside these integration boundaries increase boilerplate and indirection without improving isolation.
+Untuk pertukaran antarperangkat, kedua platform memiliki model pesan lokal pada Data fitur yang memakainya. Kesamaan format pesan dijaga sebagai kontrak komunikasi; tidak perlu berbagi file Swift untuk mengirim data.
 
-✅ Define narrow repository protocols in `Domain/Repositories/` using framework-independent types.  
-✅ Implement those protocols with concrete classes in `Data/Repositories/`.  
-✅ Keep Services concrete and use SwiftData in-memory containers for integration tests when appropriate.  
-❌ Do **not** create matching `SomethingServiceProtocol` abstractions without multiple implementations or another demonstrated architectural need.
+## Responsibilities
 
-> **Code style, naming conventions, concurrency, SwiftUI, and documentation standards** are defined in  
-> **[`05-code-style.md`](05-code-style.md)** — read that file alongside this one.
+### Presentation — MVVM
 
+- View dan komponen pendukung menampilkan informasi serta menerima interaksi pengguna.
+- ViewModel menyediakan state tampilan, menggunakan Service, dan memetakan hasil atau kegagalan menjadi UI.
+- Coordinator mengatur navigasi pada cakupannya: App untuk alur aplikasi, atau Presentation fitur untuk alur internal fitur.
+- Pergantian layar tidak menentukan lifecycle perekaman; sesi aktif tetap dimiliki komponen sesi.
+
+### Domain — Aturan Bisnis dan Kontrak
+
+- Model menjelaskan makna data yang dibutuhkan fitur.
+- Service mengatur validasi serta operasi bisnis melalui kontrak Repository.
+- Protokol Repository menyatakan kemampuan integrasi yang diperlukan Domain.
+- Domain dapat digunakan dengan implementasi data berbeda tanpa membawa objek framework ke aturan bisnis.
+
+### Data — Implementasi Integrasi
+
+- Repository mengimplementasikan kontrak Domain menggunakan HealthKit, transport, atau penyimpanan yang nanti dipilih.
+- Data dari framework dipetakan menjadi tipe domain sebelum dipakai Service dan Presentation.
+- Callback serta error integrasi diteruskan melalui kontrak yang sesuai. Error tidak diam-diam diubah menjadi keberhasilan atau data kosong.
+- DTO dan representasi persistensi ditambahkan saat dibutuhkan; teknologi penyimpanan lokal belum dipilih.
+
+### App — Awal Aplikasi dan Penyusunan Dependency
+
+- Entry point membuka RootView dan nantinya menyusun kebutuhan fitur langsung di KurinApp.
+- RootView menjadi host tampilan awal dan navigasi.
+- AppCoordinator diarahkan untuk mengatur navigasi aplikasi, sedangkan AppTabRoute diarahkan untuk menyatakan pilihan tab.
+- Komponen sesi dipertahankan selama latihan berlangsung, terlepas dari halaman yang sedang terbuka.
+- Pada Watch, konfigurasi mulai dari iPhone nantinya diteruskan ke alur sesi. Pengelolaan aturan bisnis tetap berada di Domain.
+
+## Protocol Abstraction
+
+Gunakan protokol pada **batas integrasi Domain**: perekaman, persistensi, atau akses framework. Kontrak diletakkan langsung di Domain dan implementasinya di Data.
+
+Service tetap berupa tipe konkret yang menerima dependency melalui initializer. Protokol Service tambahan baru diperlukan jika ada kebutuhan nyata, seperti beberapa implementasi yang perlu dipertukarkan.
+
+Pedoman ini menjaga isolasi aturan bisnis sambil membatasi abstraksi yang tidak diperlukan:
+
+- Kontrak Repository memiliki cakupan sempit sesuai kebutuhan operasi.
+- Kontrak menggunakan model netral, bukan objek SDK perangkat.
+- Penyusunan objek berada pada App; ViewModel tidak membuat Repository konkret sendiri.
+- Implementasi pengganti untuk preview atau pengujian mengikuti kontrak yang sama.
+
+Pedoman ini merupakan arah pengembangan. Repository, Service, dan ViewModel fitur belum tersedia pada source saat ini.
+
+## App Flow — Kondisi Saat Ini
+
+Source aktual sudah menggunakan [KurinApp.swift](Kurin/iOS/App/KurinApp.swift) sebagai entry point yang membuka [RootView.swift](Kurin/iOS/App/RootView.swift).
+
+RootView menyiapkan RootTabView dan menampilkan SplashView di atasnya saat awal aplikasi. Setelah jeda yang saat ini diatur sekitar dua detik, splash diarahkan untuk menghilang dengan animasi.
+
+```mermaid
+flowchart TD
+    A["KurinApp"] --> B["RootView"]
+    B --> C["RootTabView: belum diisi"]
+    B --> D["SplashView: placeholder di atas konten"]
+    D --> E["Setelah jeda, splash disembunyikan"]
+    E --> F["Konten tab yang masih perlu diimplementasikan"]
+```
+
+**Alur ini masih dalam pengerjaan:** RootTabView belum memiliki isi, SplashView masih berupa tampilan placeholder, dan AppCoordinator serta AppTabRoute saat ini juga masih berupa View placeholder. Nama file tersebut belum berarti koordinasi navigasi dan pemilihan tab sudah berfungsi.
+
+Di Watch, KurinWatchApp sudah menjadi entry point dan menampilkan nama Kurin. Belum ada layar sesi atau komunikasi dengan iPhone yang dijalankan dari entry point tersebut.
+
+## watchOS Setup — Sudah Tersedia
+
+Project memiliki dua target dengan source membership terpisah:
+
+- **Kurin** memakai folder iOS. Konfigurasi target utama juga mencakup macOS dan visionOS.
+- **KurinWatch** memakai folder WatchOS. Saat build untuk iOS, aplikasi Watch disertakan dalam bundle aplikasi utama. Dependency Watch dibatasi pada platform iOS.
+
+Konfigurasi Watch tersedia pada [KurinWatch.entitlements](Kurin/WatchOS/KurinWatch.entitlements) dan [Info.plist](Kurin/WatchOS/Resources/Info.plist):
+
+- **HealthKit:** deklarasi akses data kesehatan yang nantinya diminta sesuai izin pengguna.
+- **Workout processing:** dukungan background untuk sesi latihan aktif setelah logika workout diimplementasikan.
+- **Deskripsi izin baca/tulis:** penjelasan tujuan penggunaan data kesehatan.
+- **Companion identity:** mengaitkan aplikasi Watch dengan aplikasi utama.
+
+Frameworks menampilkan HealthKit sebagai dependensi SDK Watch. Products menampilkan Kurin.app dan KurinWatch.app sebagai hasil target masing-masing.
+
+Konfigurasi ini belum mencakup permintaan izin saat runtime, pengumpulan metrik, perekaman, penyimpanan hasil, atau sinkronisasi. Pengujian fungsional pada perangkat masih diperlukan saat fitur tersebut tersedia.
+
+## Session Flow — Rancangan iPhone dan Watch
+
+Watch menjadi pemilik sesi perekaman. iPhone menyiapkan pilihan latihan, memicu penggunaan Watch, dan menampilkan status yang sudah dikonfirmasi Watch.
+
+```mermaid
+sequenceDiagram
+    actor U as Pengguna
+    participant I as iPhone
+    participant W as Apple Watch
+    participant H as Data kesehatan
+    U->>I: Pilih latihan dan tekan Mulai
+    I->>I: Tampilkan menunggu Watch
+    I->>W: Picu persiapan sesi
+    W->>W: Periksa kesiapan dan izin
+    opt Jika konfirmasi di Watch dipilih
+        U->>W: Konfirmasi Mulai
+    end
+    W->>W: Mulai perekaman utama
+    W-->>I: Konfirmasi sesi aktif
+    loop Selama sesi
+        W->>W: Rekam metrik dan proses kontrol sesi
+        W-->>I: Perbarui status saat terhubung
+    end
+    U->>W: Selesaikan sesi
+    W->>H: Simpan hasil latihan
+    H-->>W: Hasil berhasil disimpan
+    W-->>I: Perbarui hasil saat data tersedia
+```
+
+Alur ini belum diimplementasikan. Keputusan mulai otomatis setelah Watch siap atau menunggu konfirmasi pengguna di Watch masih terbuka. iPhone baru menampilkan sesi sedang direkam setelah Watch menyatakan sesi benar-benar aktif.
+
+Rancangan tampilan pendamping memakai workout mirroring: Watch memiliki sesi utama dan iPhone mengamatinya. Pembaruan state dan pengiriman metrik perlu ditangani sesuai kebutuhan tampilan. Berhentinya perekaman, tersimpannya hasil, dan tersedianya data di iPhone adalah tahapan yang berbeda.
+
+## Data Exchange dan Failure Flow
+
+Model domain serta pesan pertukaran data dimiliki masing-masing platform. Kontrak pesan menyepakati identitas sesi, field, tipe data, waktu, satuan, dan versi agar perangkat dengan versi aplikasi berbeda tetap dapat berkomunikasi sesuai kemampuan masing-masing.
+
+- **Watch belum siap atau izin belum terpenuhi:** tampilkan arahan serta langkah pemulihan yang sesuai.
+- **Menunggu terlalu lama:** periksa sesi yang mungkin sudah dimulai sebelum retry, agar permintaan berulang tidak menggandakan sesi.
+- **Koneksi terputus:** Watch diarahkan untuk melanjutkan perekaman; iPhone menampilkan status koneksi dan informasi terakhir.
+- **Koneksi kembali:** selaraskan status serta hasil berdasarkan identitas sesi yang sama, termasuk ketika pesan diterima ulang.
+- **Penyimpanan atau pengiriman gagal:** tampilkan status sesuai hasil sebenarnya dan pertahankan informasi untuk pemulihan.
+
+Transport, strategi persistensi lokal, dan mekanisme pemulihan belum diimplementasikan. iPhone sebagai perekam pengganti belum menjadi kebutuhan yang disampaikan.
+
+Keputusan produk yang masih terbuka meliputi konfirmasi mulai, pembatalan saat menunggu Watch, data yang dibutuhkan setiap fitur, dan pengalaman Watch tanpa instalasi aplikasi iPhone. Dokumen perlu diperbarui saat keputusan tersebut atau implementasi nyata berubah.
